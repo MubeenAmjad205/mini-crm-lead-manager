@@ -2,6 +2,12 @@ const Lead = require('../models/Lead');
 const { VALID_STATUSES, LEAD_STATUS } = require('../constants/leadStatus');
 const { ROLES } = require('../constants/roles');
 
+const escapeRegex = (string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
+const ALLOWED_SORT_FIELDS = ['createdAt', 'name', 'email', 'status', 'assignedTo'];
+
 const createLead = async (req, res, next) => {
   try {
     const { name, email, phone, status, assignedTo } = req.body;
@@ -19,7 +25,7 @@ const createLead = async (req, res, next) => {
       email: email.toLowerCase().trim(),
       phone: phone.trim(),
       status: status || LEAD_STATUS.NEW,
-      assignedTo: assignedTo ? assignedTo.trim() : 'Unassigned',
+      assignedTo: assignedTo && assignedTo.trim() !== '' ? assignedTo.trim() : 'Unassigned',
       createdBy: req.user ? req.user._id : null
     });
 
@@ -50,7 +56,8 @@ const getLeads = async (req, res, next) => {
     }
 
     if (search && search.trim() !== '') {
-      const searchRegex = new RegExp(search.trim(), 'i');
+      const sanitized = escapeRegex(search.trim());
+      const searchRegex = new RegExp(sanitized, 'i');
       query.$or = [
         { name: searchRegex },
         { email: searchRegex },
@@ -59,8 +66,9 @@ const getLeads = async (req, res, next) => {
       ];
     }
 
+    const safeSortBy = ALLOWED_SORT_FIELDS.includes(sortBy) ? sortBy : 'createdAt';
     const sortOptions = {
-      [sortBy]: sortOrder === 'asc' ? 1 : -1
+      [safeSortBy]: sortOrder === 'asc' ? 1 : -1
     };
 
     const [leads, total] = await Promise.all([
@@ -158,7 +166,9 @@ const updateLead = async (req, res, next) => {
     if (email) updateFields.email = email.toLowerCase().trim();
     if (phone) updateFields.phone = phone.trim();
     if (status) updateFields.status = status;
-    if (assignedTo !== undefined) updateFields.assignedTo = assignedTo.trim();
+    if (assignedTo !== undefined) {
+      updateFields.assignedTo = assignedTo.trim() !== '' ? assignedTo.trim() : 'Unassigned';
+    }
 
     const lead = await Lead.findByIdAndUpdate(
       req.params.id,
@@ -194,11 +204,13 @@ const deleteLead = async (req, res, next) => {
       });
     }
 
-    if (req.user.role !== ROLES.ADMIN && lead.createdBy && lead.createdBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'You are only authorized to delete your own leads'
-      });
+    if (req.user.role !== ROLES.ADMIN) {
+      if (!lead.createdBy || lead.createdBy.toString() !== req.user._id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'You are only authorized to delete your own leads'
+        });
+      }
     }
 
     await Lead.findByIdAndDelete(req.params.id);

@@ -187,7 +187,11 @@ const logout = async (req, res, next) => {
       await User.findByIdAndUpdate(req.user._id, { refreshToken: null });
     }
 
-    res.clearCookie(REFRESH_COOKIE_NAME);
+    res.clearCookie(REFRESH_COOKIE_NAME, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    });
 
     res.status(200).json({
       success: true,

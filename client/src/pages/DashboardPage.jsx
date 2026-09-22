@@ -196,6 +196,9 @@ export const DashboardPage = () => {
     if (!deletingLead) return;
     const targetId = deletingLead._id;
 
+    const remainingCount = leads.length - 1;
+    const nextPage = remainingCount === 0 && page > 1 ? page - 1 : page;
+
     setLeads((prev) => prev.filter((l) => l._id !== targetId));
     setPagination((prev) => ({
       ...prev,
@@ -203,12 +206,15 @@ export const DashboardPage = () => {
       totalPages: Math.ceil(Math.max(0, prev.total - 1) / limit) || 1
     }));
     setDeletingLead(null);
+    if (nextPage !== page) {
+      setPage(nextPage);
+    }
 
     try {
       await leadService.deleteLead(targetId);
       showToast('Lead deleted successfully');
       fetchAnalytics();
-      fetchLeads(page, limit, debouncedSearch, statusFilter, false);
+      fetchLeads(nextPage, limit, debouncedSearch, statusFilter, false);
     } catch (err) {
       fetchLeads(page, limit, debouncedSearch, statusFilter, false);
       showToast(err.response?.data?.message || 'Failed to delete lead', 'error');

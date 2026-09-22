@@ -240,6 +240,16 @@ describe('Mini CRM API Suite', () => {
       expect(response.body.data.leads[0].name).toBe('Arthur Dent');
     });
 
+    it('should safely handle search queries with regex special characters without crashing', async () => {
+      const specialQuery = '(+1*[';
+      const response = await request(app)
+        .get(`/api/leads?search=${encodeURIComponent(specialQuery)}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body.data.leads)).toBe(true);
+    });
+
     it('should update lead status', async () => {
       const response = await request(app)
         .patch(`/api/leads/${sampleLeadId}/status`)
@@ -262,7 +272,28 @@ describe('Mini CRM API Suite', () => {
       expect(Array.isArray(response.body.data.recentLeads)).toBe(true);
     });
 
-    it('should allow deletion of a lead', async () => {
+    it('should reject unauthorized lead deletion from standard user', async () => {
+      const adminLead = await request(app)
+        .post('/api/leads')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Executive Lead',
+          email: 'exec@enterprise.com',
+          phone: '+1 555-8888',
+          status: 'new'
+        });
+
+      const execLeadId = adminLead.body.data._id;
+
+      const deleteResponse = await request(app)
+        .delete(`/api/leads/${execLeadId}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(deleteResponse.status).toBe(403);
+      expect(deleteResponse.body.success).toBe(false);
+    });
+
+    it('should allow deletion of a lead by authorized user', async () => {
       const response = await request(app)
         .delete(`/api/leads/${sampleLeadId}`)
         .set('Authorization', `Bearer ${adminToken}`);
