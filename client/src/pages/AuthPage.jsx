@@ -57,6 +57,9 @@ export const AuthPage = ({ initialMode = 'login' }) => {
         err.response?.data?.message ||
         (isLogin ? 'Failed to log in' : 'Failed to register account');
       const backendErrors = err.response?.data?.errors || {};
+      if (backendMessage.toLowerCase().includes('email')) {
+        backendErrors.email = backendMessage;
+      }
       setErrors({ form: backendMessage, ...backendErrors });
     } finally {
       setLoading(false);
