@@ -1,18 +1,26 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Sun, Moon, LogOut, ShieldCheck, User as UserIcon, Flame, Home, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 
-export const Navbar = ({ currentView, onNavigate }) => {
+export const Navbar = () => {
   const { user, logout, isAdmin } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-borderTheme bg-surface-card/80 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <button
-            onClick={() => onNavigate && onNavigate('home')}
+            onClick={() => navigate('/')}
             className="flex items-center gap-3 text-left focus:outline-none"
           >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary-600 to-amber-500 flex items-center justify-center shadow-lg shadow-primary-500/20 text-white">
@@ -29,32 +37,30 @@ export const Navbar = ({ currentView, onNavigate }) => {
             </div>
           </button>
 
-          {onNavigate && (
-            <nav className="hidden md:flex items-center gap-1 pl-4 border-l border-borderTheme">
-              <button
-                onClick={() => onNavigate('home')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  currentView === 'home'
-                    ? 'bg-surface-hover text-primary-500'
-                    : 'text-content-muted hover:text-content-main hover:bg-surface-hover'
-                }`}
-              >
-                <Home className="w-3.5 h-3.5" />
-                <span>Home</span>
-              </button>
-              <button
-                onClick={() => onNavigate('dashboard')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  currentView === 'dashboard'
-                    ? 'bg-surface-hover text-primary-500'
-                    : 'text-content-muted hover:text-content-main hover:bg-surface-hover'
-                }`}
-              >
-                <LayoutDashboard className="w-3.5 h-3.5" />
-                <span>Dashboard</span>
-              </button>
-            </nav>
-          )}
+          <nav className="hidden md:flex items-center gap-1 pl-4 border-l border-borderTheme">
+            <button
+              onClick={() => navigate('/')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                location.pathname === '/'
+                  ? 'bg-surface-hover text-primary-500'
+                  : 'text-content-muted hover:text-content-main hover:bg-surface-hover'
+              }`}
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>Home</span>
+            </button>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                location.pathname === '/dashboard'
+                  ? 'bg-surface-hover text-primary-500'
+                  : 'text-content-muted hover:text-content-main hover:bg-surface-hover'
+              }`}
+            >
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              <span>Dashboard</span>
+            </button>
+          </nav>
         </div>
 
         <div className="flex items-center gap-3">
@@ -97,7 +103,7 @@ export const Navbar = ({ currentView, onNavigate }) => {
             </div>
 
             <button
-              onClick={logout}
+              onClick={handleLogout}
               title="Sign out"
               className="p-2 text-content-muted hover:text-rose-500 rounded-xl hover:bg-rose-500/10 transition-colors"
             >

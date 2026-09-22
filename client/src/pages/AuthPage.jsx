@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Flame, Lock, Mail, User, ShieldCheck, ArrowRight, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { loginFormSchema, registerFormSchema } from '../validations/authSchema';
 
-export const AuthPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
+export const AuthPage = ({ initialMode = 'login' }) => {
+  const [isLogin, setIsLogin] = useState(initialMode !== 'register');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -17,6 +18,7 @@ export const AuthPage = () => {
 
   const { login, register } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
 
   const validate = () => {
     const schema = isLogin ? loginFormSchema : registerFormSchema;
@@ -49,6 +51,7 @@ export const AuthPage = () => {
       } else {
         await register(formData);
       }
+      navigate('/dashboard');
     } catch (err) {
       const backendMessage =
         err.response?.data?.message ||
@@ -81,6 +84,15 @@ export const AuthPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center px-4 py-12 bg-surface-base relative">
+      <div className="absolute top-6 left-6">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 text-xs font-medium text-content-muted hover:text-content-main transition-colors"
+        >
+          ← Back to Home
+        </button>
+      </div>
+
       <div className="absolute top-6 right-6">
         <button
           onClick={toggleTheme}

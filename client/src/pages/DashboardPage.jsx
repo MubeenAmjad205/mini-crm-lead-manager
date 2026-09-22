@@ -9,7 +9,7 @@ import { DeleteConfirmModal } from '../components/dashboard/DeleteConfirmModal';
 import { leadService } from '../services/leadService';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 
-export const DashboardPage = ({ onNavigate }) => {
+export const DashboardPage = () => {
   const [leads, setLeads] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -223,7 +223,7 @@ export const DashboardPage = ({ onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-surface-base flex flex-col transition-colors duration-200">
-      <Navbar currentView="dashboard" onNavigate={onNavigate} />
+      <Navbar />
 
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-surface-card border border-borderTheme shadow-xl animate-in slide-in-from-bottom-5">
