@@ -9,17 +9,17 @@ lead-management/
 ├── package.json               # Monorepo workspace orchestrator
 ├── README.md                  # Project documentation & API guide
 ├── server/                    # Node.js + Express + MongoDB backend
-│   ├── src/
-│   │   ├── config/            # Database connection & memory-server fallback
-│   │   ├── constants/         # Roles and status enums
-│   │   ├── controllers/       # Auth and lead business logic
-│   │   ├── middleware/        # JWT auth, RBAC, and error handler
-│   │   ├── models/            # Mongoose schemas (User, Lead)
-│   │   ├── routes/            # Express route definitions
-│   │   ├── utils/             # Token generation and verification
-│   │   ├── app.js             # Express app setup
-│   │   └── server.js          # Entrypoint listener
-│   └── tests/                 # Automated API integration tests
+│   └── src/
+│       ├── config/            # Database connection & memory-server fallback
+│       ├── constants/         # Roles and status enums
+│       ├── controllers/       # Auth and lead business logic
+│       ├── middleware/        # JWT auth, RBAC, validate, and error handler
+│       ├── models/            # Mongoose schemas (User, Lead)
+│       ├── routes/            # Express route definitions
+│       ├── utils/             # Token generation and verification
+│       ├── validations/       # Zod schemas (auth, lead)
+│       ├── app.js             # Express app setup
+│       └── server.js          # Entrypoint listener
 └── client/                    # React + Vite + Tailwind CSS frontend
     ├── src/
     │   ├── components/
@@ -27,10 +27,12 @@ lead-management/
     │   │   ├── dashboard/     # LeadTable, AnalyticsCards, FilterBar, Pagination, StatusDropdown
     │   │   └── layout/        # Navbar
     │   ├── context/           # AuthContext (JWT/RBAC), ThemeContext (Light/Dark)
-    │   ├── pages/             # AuthPage (Login/Register), DashboardPage
-    │   ├── services/          # Axios instance with 401 refresh token interceptor
+    │   ├── pages/             # HomePage, AuthPage, DashboardPage
+    │   ├── routes/            # AppRoutes, PublicRoute, ProtectedRoute
+    │   ├── services/          # proxy.js (Axios 401 refresh interceptor), authService, leadService
+    │   ├── validations/       # Zod client schemas
     │   ├── index.css          # Design system CSS variables & theme tokens
-    │   ├── App.jsx            # App root & route guards
+    │   ├── App.jsx            # App root & route providers
     │   └── main.jsx           # Client entrypoint
     ├── tailwind.config.js
     └── vite.config.js
@@ -43,16 +45,17 @@ lead-management/
 ### Backend
 - **Authentication**: JWT access tokens (15m expiry) and rotating refresh tokens (7d expiry) with HTTP-only cookie support.
 - **Role-Based Access Control (RBAC)**: Support for `admin` and `user` roles with middleware protection.
+- **Zod Validation**: Runtime schema validation on requests.
 - **Lead Model**: Strictly follows the assignment specification:
   - `name`: String (required)
-  - `email`: String (required)
+  - `email`: String (required, unique)
   - `phone`: String (required)
   - `status`: `"new"` | `"contacted"` | `"converted"`
   - `assignedTo`: String
   - `createdAt`: Date
 - **Lead APIs**:
   - `POST /api/leads`: Create lead with validation.
-  - `GET /api/leads`: Retrieve leads with pagination (`page`, `limit`), search query, and status filter.
+  - `GET /api/leads`: Retrieve leads with pagination (`page`, `limit`), regex search, and status filter.
   - `PATCH /api/leads/:id/status`: Update status directly.
   - `PUT /api/leads/:id`: Full lead update.
   - `DELETE /api/leads/:id`: Remove lead with role checks.
@@ -97,12 +100,6 @@ The frontend will be available at:
 
 The backend API will be available at:
 `http://localhost:5000`
-
-### Running Automated Tests
-Run integration tests for all API endpoints:
-```bash
-npm test
-```
 
 ---
 

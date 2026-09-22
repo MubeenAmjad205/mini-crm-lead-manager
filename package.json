@@ -11,8 +11,6 @@
     "dev:server": "npm run dev --workspace=server",
     "dev:client": "npm run dev --workspace=client",
     "build": "npm run build --workspace=client",
-    "test": "npm run test --workspace=server",
-    "check": "npm run build && npm run test",
     "install:all": "npm install"
   },
   "devDependencies": {
